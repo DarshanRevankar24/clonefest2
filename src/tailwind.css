@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* small customizations */
+@layer components {
+  .container {
+    max-width: 1100px;
+  }
+}

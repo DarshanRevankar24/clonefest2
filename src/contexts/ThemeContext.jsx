@@ -2,7 +2,16 @@ import React, { createContext, useEffect, useState } from "react";
 
 export const ThemeContext = createContext();
 
-const defaultVars = {
+const lightVars = {
+  "--bg": "#ffffff",
+  "--card": "#f3f4f6",
+  "--text": "#111111",
+  "--muted": "#6b7280",
+  "--primary": "#3b82f6",
+  "--accent": "#06b6d4",
+};
+
+const darkVars = {
   "--bg": "#0f172a",
   "--card": "#0b1220",
   "--text": "#e6eef8",
@@ -14,7 +23,7 @@ const defaultVars = {
 export const ThemeProvider = ({ children }) => {
   const [vars, setVars] = useState(() => {
     const saved = localStorage.getItem("cf_palette");
-    return saved ? JSON.parse(saved) : defaultVars;
+    return saved ? JSON.parse(saved) : darkVars;
   });
 
   useEffect(() => {
@@ -24,13 +33,17 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("cf_palette", JSON.stringify(vars));
   }, [vars]);
 
-  const updateVar = (key, value) => setVars((s) => ({ ...s, [key]: value }));
-  const reset = () => {
-    setVars(defaultVars);
+  const toggleTheme = () => {
+    setVars((prev) =>
+      prev["--bg"] === "#ffffff" ? darkVars : lightVars
+    );
   };
 
+  const updateVar = (key, value) => setVars((s) => ({ ...s, [key]: value }));
+  const reset = () => setVars(darkVars);
+
   return (
-    <ThemeContext.Provider value={{ vars, updateVar, reset }}>
+    <ThemeContext.Provider value={{ vars, updateVar, reset, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

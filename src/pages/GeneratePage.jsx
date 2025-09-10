@@ -1,6 +1,15 @@
+// src/pages/GeneratePage.jsx
 import React, { useState } from "react";
 import api from "../api";
 import GeneratedImageCard from "../components/GeneratedImageCard";
+import toast from "react-hot-toast";
+
+const SUGGESTIONS = [
+  "Indian flag",
+  "Cute puppy lying on bed",
+  "Futuristic cyberpunk city at night",
+  "Sunset over lavender fields",
+];
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
@@ -8,22 +17,24 @@ export default function GeneratePage() {
   const [results, setResults] = useState([]);
 
   const submit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+    if (!prompt.trim()) return toast.error("Add a prompt");
     try {
       setLoading(true);
       const res = await api.generateImage({ prompt });
-      // Many backends return job object or final image - handle both
+      // handle response shapes
+      const items = [];
       if (res.job_id) {
-        // optimistic: poll until done (backend may not implement). We'll attempt one fetch
         const job = await api.getGenerateStatus(res.job_id);
-        if (job?.result_url) setResults(prev => [{ url: job.result_url, prompt, model: job.model }, ...prev]);
-      } else if (res.url) {
-        setResults(prev => [{ url: res.url, prompt, model: res.model }, ...prev]);
-      } else if (res.items) {
-        setResults(prev => [...res.items.map(it => ({ url: it.url, prompt: it.prompt, model: it.model })), ...prev]);
-      }
+        if (job?.result_url) items.push({ url: job.result_url, prompt });
+      } else if (res.url) items.push({ url: res.url, prompt });
+      else if (res.items) items.push(...res.items.map(it => ({ url: it.url, prompt: it.prompt || prompt, model: it.model })));
+      // push to results (attach prompt)
+      setResults(prev => items.concat(prev));
+      toast.success("Generated");
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message || "Generation failed");
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -31,16 +42,31 @@ export default function GeneratePage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl">AI Image Generation</h2>
-      <form onSubmit={submit} className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Describe your image..." className="p-2 rounded bg-[var(--bg)] md:col-span-2" />
-        <div className="flex gap-2">
-          <button disabled={loading} className="px-3 py-2 bg-[var(--primary)] text-white rounded">{loading ? "Generating..." : "Generate"}</button>
-        </div>
-      </form>
+      <h2 className="text-3xl font-semibold mb-4">AI Image Generation</h2>
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {results.map((r,i) => <GeneratedImageCard key={i} item={r} />)}
+      <div className="max-w-3xl mx-auto bg-[var(--card)] p-6 rounded-lg shadow">
+        <form onSubmit={submit} className="flex gap-3">
+          <input
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            placeholder="Describe your image (e.g. 'A serene lake at dawn')"
+            className="flex-1 p-3 rounded bg-[var(--bg)] border border-transparent focus:outline-none"
+          />
+          <button disabled={loading} className="px-4 py-2 rounded bg-[var(--primary)] text-white">
+            {loading ? <span className="inline-flex items-center gap-2"><span className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"></span>Generating...</span> : "Generate"}
+          </button>
+        </form>
+
+        <div className="mt-3 text-sm text-[var(--muted)]">Quick prompts:</div>
+        <div className="mt-2 flex gap-2 flex-wrap">
+          {SUGGESTIONS.map((s, i) => (
+            <button key={i} onClick={() => setPrompt(s)} className="px-3 py-1 rounded border text-sm">{s}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {results.map((r, i) => <GeneratedImageCard key={i} item={r} />)}
       </div>
     </div>
   );

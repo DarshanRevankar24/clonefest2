@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
+    load_dotenv()
     logger.critical("DATABASE_URL not found in environment variables.")
     raise ValueError("No DATABASE_URL found. Please set it in your .env file.")
 

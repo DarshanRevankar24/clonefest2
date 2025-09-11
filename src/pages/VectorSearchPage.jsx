@@ -1,5 +1,5 @@
 // src/pages/VectorSearchPage.jsx
-import React, { useState } from "react";
+import { useState } from "react";
 import api from "../api";
 import ImageGrid from "../components/ImageGrid";
 import toast from "react-hot-toast";

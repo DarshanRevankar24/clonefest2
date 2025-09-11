@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import api from "../api";
 
 export const AuthContext = createContext();
@@ -14,6 +14,8 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
     } catch (e) {
       setUser(null);
+      // Optional: Clear invalid token
+      localStorage.removeItem("cf_token");
     } finally {
       setLoading(false);
     }
@@ -24,30 +26,40 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const data = await api.login({ email, password });
-    if (data?.token) {
-      localStorage.setItem("cf_token", data.token);
-      await loadMe();
+    try {
+      const data = await api.login({ email, password });
+      if (data?.token) {
+        localStorage.setItem("cf_token", data.token);
+        await loadMe();
+      }
+      return data;
+    } catch (error) {
+      throw error; // Re-throw for component error handling
     }
-    return data;
   };
 
   const register = async (payload) => {
-    const data = await api.register(payload);
-    if (data?.token) {
-      localStorage.setItem("cf_token", data.token);
-      await loadMe();
+    try {
+      const data = await api.register(payload);
+      if (data?.token) {
+        localStorage.setItem("cf_token", data.token);
+        await loadMe();
+      }
+      return data;
+    } catch (error) {
+      throw error;
     }
-    return data;
   };
 
   const logout = () => {
     localStorage.removeItem("cf_token");
     setUser(null);
+    // Optional: Call backend logout if available
+    // api.logout().catch(console.error);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, loadMe }}>
       {children}
     </AuthContext.Provider>
   );

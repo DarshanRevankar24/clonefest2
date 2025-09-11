@@ -1,5 +1,5 @@
 // src/components/UploadButton.jsx
-import React, { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 
 export default function UploadButton({ onFiles }) {
   const ref = useRef();

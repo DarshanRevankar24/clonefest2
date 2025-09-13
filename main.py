@@ -9,7 +9,7 @@ from database import engine, Base
 
 # --- Routers ---
 from routers import auth, posts, comments, images, albums
-from routers import search, vector_search, generate, palettes, admin  # ✅ new
+from routers import search, vector_search, generate, palettes, admin
 
 # Logging setup
 logging.basicConfig(level=logging.INFO,
@@ -36,9 +36,21 @@ app = FastAPI(
 )
 
 # CORS
+# Define your allowed origins explicitly for security.
+# This is a list of the URLs for your front-end applications.
+origins = [
+    # Local development URLs
+    "http://localhost",
+    "http://localhost:3000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:3000",
+    # Replace this with the URL of your deployed frontend in production
+    "https://your-production-frontend.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ restrict to frontend domain in production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
